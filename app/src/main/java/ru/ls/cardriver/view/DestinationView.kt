@@ -6,18 +6,15 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
-import ru.ls.cardriver.extensions.toPx
 
-class CarView @JvmOverloads constructor(
+class DestinationView @JvmOverloads constructor(
 	context: Context,
 	attrs: AttributeSet? = null,
 	defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
-	private val fillColor = Color.parseColor("#FFA500")
-	private val strokeColor = Color.BLACK
+	private val fillColor = Color.GREEN
 	private lateinit var fillPaint: Paint
-	private lateinit var strokePaint: Paint
 
 	init {
 		isFocusable = true
@@ -31,24 +28,16 @@ class CarView @JvmOverloads constructor(
 			isAntiAlias = true
 			style = Paint.Style.FILL
 		}
-		strokePaint = Paint().apply {
-			color = strokeColor
-			isAntiAlias = true
-			strokeWidth = 3.toPx().toFloat()
-			style = Paint.Style.STROKE
-		}
 	}
 
 	override fun onDraw(canvas: Canvas?) {
 		super.onDraw(canvas)
 		canvas?.let { canvas ->
-			val left = 0f
-			val top = 0f
-			val right = measuredWidth.toFloat()
-			val bottom = measuredHeight.toFloat()
+			val x = measuredWidth.toFloat() / 2
+			val y = measuredHeight.toFloat() / 2
+			val radius = measuredWidth.toFloat() / 2
 
-			canvas.drawRect(left, top, right, bottom, fillPaint)
-			canvas.drawRect(left, top, right, bottom, strokePaint)
+			canvas.drawCircle(x, y, radius, fillPaint)
 		}
 	}
 }

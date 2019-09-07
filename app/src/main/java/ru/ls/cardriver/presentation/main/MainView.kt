@@ -7,9 +7,17 @@ import ru.ls.cardriver.domain.model.PointLocation
 
 interface MainView: MvpView {
 
-	fun carLocations(): Observable<CarLocation>
-
-	fun carDirections(): Observable<Float>
+//	fun carLocations(): Observable<CarLocation>
+//
+//	fun carDirections(): Observable<Float>
 
 	fun destinationClicks(): Observable<PointLocation>
+
+	fun setCarLocation(position: CarLocation)
+
+	fun setCarAngle(angle: Float)
+
+	fun showDestinationPoint(location: PointLocation)
+
+	fun hideDestinationPoint()
 }
