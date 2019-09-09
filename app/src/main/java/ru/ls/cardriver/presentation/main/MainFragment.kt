@@ -38,8 +38,8 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 
 	override fun setCarLocation(position: CarLocation) {
 		with(viewCar) {
-			x = position.x - width / 2
-			y = position.y - height / 2
+			x = position.x - measuredWidth / 2
+			y = position.y - measuredHeight / 2
 			requestLayout()
 		}
 	}

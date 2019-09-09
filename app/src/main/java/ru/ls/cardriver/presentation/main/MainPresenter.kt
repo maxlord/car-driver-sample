@@ -51,7 +51,7 @@ class MainPresenter : MvpBasePresenter<MainView>() {
 	}
 
 	private fun rotateCar(fromAngle: Float, toAngle: Float) {
-		if (abs(fromAngle - toAngle) < 0.001) return
+		if (abs(fromAngle - toAngle) < 0.5) return
 
 		ValueAnimator.ofFloat(fromAngle, toAngle)
 			.apply {
@@ -83,13 +83,11 @@ class MainPresenter : MvpBasePresenter<MainView>() {
 				duration = CAR_DRIVE_DURATION
 				addUpdateListener {
 					val step = it.animatedValue as Int
-					val x =
-						currentCarLocation.x + (if (isRightDirectionX) stepX * step else -stepX * step)
-					val y =
-						currentCarLocation.y + (if (isTopDirectionY) -stepY * step else stepY * step)
-					ifViewAttached {
-						it.setCarLocation(CarLocation(x.toFloat(), y.toFloat()))
-					}
+					val offsetX = (if (isRightDirectionX) stepX * step else -stepX * step)
+					val offsetY = (if (isTopDirectionY) -stepY * step else stepY * step)
+					val x = currentCarLocation.x + offsetX
+					val y = currentCarLocation.y + offsetY
+					ifViewAttached { it.setCarLocation(CarLocation(x.toFloat(), y.toFloat())) }
 				}
 				doOnEnd {
 					currentCarLocation = CarLocation(destinationLocation.x, destinationLocation.y)
