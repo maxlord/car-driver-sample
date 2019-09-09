@@ -5,11 +5,7 @@ import io.reactivex.Observable
 import ru.ls.cardriver.domain.model.CarLocation
 import ru.ls.cardriver.domain.model.PointLocation
 
-interface MainView: MvpView {
-
-//	fun carLocations(): Observable<CarLocation>
-//
-//	fun carDirections(): Observable<Float>
+interface MainView : MvpView {
 
 	fun destinationClicks(): Observable<PointLocation>
 

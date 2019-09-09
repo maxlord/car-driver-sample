@@ -2,15 +2,14 @@ package ru.ls.cardriver.presentation.main
 
 import android.animation.ValueAnimator
 import android.view.animation.AccelerateDecelerateInterpolator
+import android.view.animation.DecelerateInterpolator
 import androidx.core.animation.doOnEnd
 import com.hannesdorfmann.mosby3.mvp.MvpBasePresenter
 import io.reactivex.disposables.CompositeDisposable
 import ru.ls.cardriver.domain.model.CarLocation
 import ru.ls.cardriver.domain.model.PointLocation
-import timber.log.Timber
+import ru.ls.cardriver.utils.LocationUtils
 import kotlin.math.abs
-import kotlin.math.atan2
-
 
 class MainPresenter : MvpBasePresenter<MainView>() {
 
@@ -37,51 +36,77 @@ class MainPresenter : MvpBasePresenter<MainView>() {
 	}
 
 	private fun onHandleDestinationClick(location: PointLocation) {
-		Timber.d("location = $location")
 		if (!isDriving) {
+			isDriving = true
 			currentDestinationLocation = location
 			ifViewAttached {
 				it.showDestinationPoint(currentDestinationLocation)
 			}
-			val newAngle = calculateAngle(currentCarLocation, currentDestinationLocation)
-			rotateCar(currentCarAngle, newAngle)
+			val fromPoint = currentCarLocation.toPoint()
+			val toPoint = currentDestinationLocation.toPoint()
+			val newAngle = LocationUtils.calcRotationAngleInDegrees(fromPoint, toPoint)
+			rotateCar(currentCarAngle, newAngle.toFloat())
+			moveCar(currentCarLocation, currentDestinationLocation)
 		}
 	}
 
 	private fun rotateCar(fromAngle: Float, toAngle: Float) {
-		Timber.d("from = $fromAngle; to = $toAngle")
 		if (abs(fromAngle - toAngle) < 0.001) return
 
-		val animator = ValueAnimator.ofFloat(fromAngle, toAngle)
-		animator.interpolator = AccelerateDecelerateInterpolator()
-		animator.duration = CAR_ROTATION_DURATION
-		animator.addUpdateListener {
-			val angle = it.animatedValue as Float
-//			Timber.d("angle = $angle")
-			ifViewAttached { it.setCarAngle(angle) }
-		}
-		animator.doOnEnd {
-			currentCarAngle = toAngle
-		}
-		animator.start()
+		ValueAnimator.ofFloat(fromAngle, toAngle)
+			.apply {
+				interpolator = AccelerateDecelerateInterpolator()
+				duration = CAR_ROTATION_DURATION
+				addUpdateListener {
+					val angle = it.animatedValue as Float
+					ifViewAttached { it.setCarAngle(angle) }
+				}
+				doOnEnd {
+					currentCarAngle = toAngle
+				}
+				start()
+			}
 	}
 
-	private fun calculateAngle(carLocation: CarLocation, pointLocation: PointLocation): Float {
-		val angle = Math.toDegrees(
-			atan2(
-				(pointLocation.y - carLocation.y).toDouble(),
-				(pointLocation.x - carLocation.x).toDouble()
-			)
-		).toFloat()
+	private fun moveCar(
+		carLocation: CarLocation,
+		destinationLocation: PointLocation
+	) {
+		val stepCount = CAR_DRIVE_STEP_COUNT
+		val stepX = abs(destinationLocation.x - carLocation.x) / (1.0 * stepCount)
+		val stepY = abs(destinationLocation.y - carLocation.y) / (1.0 * stepCount)
+		val isRightDirectionX = carLocation.x < destinationLocation.x
+		val isTopDirectionY = carLocation.y > destinationLocation.y
+		ValueAnimator.ofInt(0, stepCount - 1)
+			.apply {
+				interpolator = DecelerateInterpolator()
+				duration = CAR_DRIVE_DURATION
+				addUpdateListener {
+					val step = it.animatedValue as Int
+					val x =
+						currentCarLocation.x + (if (isRightDirectionX) stepX * step else -stepX * step)
+					val y =
+						currentCarLocation.y + (if (isTopDirectionY) -stepY * step else stepY * step)
+					ifViewAttached {
+						it.setCarLocation(CarLocation(x.toFloat(), y.toFloat()))
+					}
+				}
+				doOnEnd {
+					currentCarLocation = CarLocation(destinationLocation.x, destinationLocation.y)
+					isDriving = false
+				}
+				start()
+			}
+	}
 
-//		if (angle < 0) {
-//			angle += 360f
-//		}
-
-		return angle
+	override fun destroy() {
+		disposables.clear()
+		super.destroy()
 	}
 
 	companion object {
-		private const val CAR_ROTATION_DURATION = 1_000L
+		private const val CAR_ROTATION_DURATION = 1_500L
+		private const val CAR_DRIVE_DURATION = 3_000L
+		private const val CAR_DRIVE_STEP_COUNT = 1000
 	}
 }

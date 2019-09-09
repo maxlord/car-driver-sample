@@ -1,14 +1,10 @@
 package ru.ls.cardriver.presentation.main
 
-import android.animation.ValueAnimator
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.AccelerateDecelerateInterpolator
-import androidx.core.animation.doOnEnd
-import com.google.android.material.snackbar.Snackbar
 import com.hannesdorfmann.mosby3.mvp.MvpFragment
 import com.jakewharton.rxbinding3.view.touches
 import io.reactivex.Observable
@@ -16,7 +12,6 @@ import kotlinx.android.synthetic.main.fragment_main.*
 import ru.ls.cardriver.R
 import ru.ls.cardriver.domain.model.CarLocation
 import ru.ls.cardriver.domain.model.PointLocation
-import timber.log.Timber
 
 class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 
@@ -30,7 +25,9 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 
 	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 		super.onViewCreated(view, savedInstanceState)
-		presenter.init(container.measuredWidth.toFloat(), container.measuredHeight.toFloat())
+		container.post {
+			presenter.init(container.width.toFloat(), container.height.toFloat())
+		}
 	}
 
 	override fun createPresenter(): MainPresenter = MainPresenter()
@@ -41,8 +38,8 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 
 	override fun setCarLocation(position: CarLocation) {
 		with(viewCar) {
-			x = position.x
-			y = position.y
+			x = position.x - width / 2
+			y = position.y - height / 2
 			requestLayout()
 		}
 	}
@@ -51,9 +48,6 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 		with(viewCar) {
 			rotation = angle
 			requestLayout()
-		}
-		view?.let {
-			Snackbar.make(it, "Current Angle = $angle", Snackbar.LENGTH_INDEFINITE).show()
 		}
 	}
 
@@ -68,27 +62,6 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 
 	override fun hideDestinationPoint() {
 		viewDestinationPoint.visibility = View.INVISIBLE
-	}
-
-	@Deprecated("")
-	private fun emulateDriving() {
-		val carView = viewCar
-
-		carView.rotation = 45f
-		val r = carView.rotation
-		val animator = ValueAnimator.ofFloat(r + 0f, r + 360f)
-		animator.interpolator = AccelerateDecelerateInterpolator()
-		animator.duration = 2_000
-		animator.addUpdateListener {
-			val v = it.animatedValue as Float
-			Timber.d("anim value = $v")
-			carView.rotation = v
-			carView.x += 1f
-			carView.y -= 1f
-			carView.requestLayout()
-		}
-		animator.doOnEnd { }
-		animator.start()
 	}
 
 	companion object {

@@ -6,14 +6,12 @@
 
 	<ru.ls.cardriver.view.CarView
 		android:id="@+id/viewCar"
-		android:layout_width="72dp"
-		android:layout_height="144dp"
-		android:layout_gravity="center" />
+		android:layout_width="@dimen/car_width"
+		android:layout_height="@dimen/car_height" />
 
 	<ru.ls.cardriver.view.DestinationView
 		android:id="@+id/viewDestinationPoint"
-		android:layout_width="24dp"
-		android:layout_height="24dp"
-		android:layout_gravity="top" />
+		android:layout_width="@dimen/destination_point_size"
+		android:layout_height="@dimen/destination_point_size" />
 
 </FrameLayout>
