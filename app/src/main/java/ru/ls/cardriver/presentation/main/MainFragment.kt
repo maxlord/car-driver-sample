@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.core.animation.doOnEnd
+import com.google.android.material.snackbar.Snackbar
 import com.hannesdorfmann.mosby3.mvp.MvpFragment
 import com.jakewharton.rxbinding3.view.touches
 import io.reactivex.Observable
@@ -50,6 +51,9 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 		with(viewCar) {
 			rotation = angle
 			requestLayout()
+		}
+		view?.let {
+			Snackbar.make(it, "Current Angle = $angle", Snackbar.LENGTH_INDEFINITE).show()
 		}
 	}
 
