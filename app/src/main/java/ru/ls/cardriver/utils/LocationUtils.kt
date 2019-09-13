@@ -28,7 +28,7 @@ class LocationUtils {
 			return if (phi > 180) 360 - phi else phi
 		}
 
-		fun negativeDirection(alpha: Int, beta: Int): Boolean {
+		fun isNegativeDirection(alpha: Int, beta: Int): Boolean {
 			return alpha - beta in 0..180 || alpha - beta <= -180 && alpha - beta >= -360
 		}
 	}

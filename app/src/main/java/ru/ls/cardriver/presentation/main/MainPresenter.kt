@@ -5,7 +5,6 @@ import io.reactivex.disposables.CompositeDisposable
 import ru.ls.cardriver.domain.model.CarLocation
 import ru.ls.cardriver.domain.model.PointLocation
 import ru.ls.cardriver.utils.LocationUtils
-import timber.log.Timber
 import kotlin.math.abs
 
 class MainPresenter : MvpBasePresenter<MainView>() {
@@ -45,16 +44,14 @@ class MainPresenter : MvpBasePresenter<MainView>() {
 			val toPoint = currentDestinationLocation.toPoint()
 			val newAngle = LocationUtils.calcRotationAngleInDegrees(fromPoint, toPoint)
 
-			ifViewAttached {
-				val fromAngle = currentCarAngle.toInt()
-				val toAngle = newAngle.toInt()
+			val fromAngle = currentCarAngle.toInt()
+			val toAngle = newAngle.toInt()
 
-				val angleDiff = LocationUtils.distance(fromAngle, toAngle)
-				val negativeDirection = LocationUtils.negativeDirection(fromAngle, toAngle)
-				if (angleDiff > 0) {
-					val angles = generateAngles(fromAngle, toAngle, negativeDirection)
-					it.rotateCar(angles, toAngle)
-				}
+			val angleDiff = LocationUtils.distance(fromAngle, toAngle)
+			val negativeDirection = LocationUtils.isNegativeDirection(fromAngle, toAngle)
+			if (angleDiff > 0) {
+				val angles = generateAngles(fromAngle, toAngle, negativeDirection)
+				ifViewAttached { it.rotateCar(angles, toAngle) }
 			}
 		}
 	}
