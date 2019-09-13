@@ -1,6 +1,7 @@
 package ru.ls.cardriver.utils
 
 import android.graphics.Point
+import kotlin.math.abs
 import kotlin.math.atan2
 
 class LocationUtils {
@@ -16,6 +17,16 @@ class LocationUtils {
 				angle += 360.0
 			}
 			return angle
+		}
+
+		/**
+		 * Shortest distance (angular) between two angles.
+		 * It will be in range [0, 180].
+		 */
+		fun distance(alpha: Int, beta: Int): Int {
+			val phi = abs(beta - alpha) % 360 // This is either the distance or 360 - distance
+//			return phi
+			return if (phi > 180) 360 - phi else phi
 		}
 	}
 }

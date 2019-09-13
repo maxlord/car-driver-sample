@@ -5,6 +5,7 @@ import io.reactivex.disposables.CompositeDisposable
 import ru.ls.cardriver.domain.model.CarLocation
 import ru.ls.cardriver.domain.model.PointLocation
 import ru.ls.cardriver.utils.LocationUtils
+import timber.log.Timber
 import kotlin.math.abs
 
 class MainPresenter : MvpBasePresenter<MainView>() {
@@ -48,7 +49,8 @@ class MainPresenter : MvpBasePresenter<MainView>() {
 				val fromAngle = currentCarAngle.toInt()
 				val toAngle = newAngle.toInt()
 
-				val angleDiff= abs(fromAngle - toAngle)
+				val angleDiff= LocationUtils.distance(fromAngle, toAngle)
+				Timber.d("angleDiff = $angleDiff")
 				if (angleDiff > 0) {
 					val angles = arrayListOf<Int>()
 					var angle = fromAngle
