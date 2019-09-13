@@ -1,13 +1,17 @@
 package ru.ls.cardriver.presentation.main
 
 import com.hannesdorfmann.mosby3.mvp.MvpBasePresenter
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
+import ru.ls.cardriver.data.interactor.LocationInteractor
 import ru.ls.cardriver.domain.model.CarLocation
 import ru.ls.cardriver.domain.model.PointLocation
-import ru.ls.cardriver.utils.LocationUtils
 import kotlin.math.abs
 
-class MainPresenter : MvpBasePresenter<MainView>() {
+class MainPresenter(
+	private val interactor: LocationInteractor
+) : MvpBasePresenter<MainView>() {
 
 	private val disposables = CompositeDisposable()
 	private var containerWidth: Int = 0
@@ -40,50 +44,29 @@ class MainPresenter : MvpBasePresenter<MainView>() {
 			ifViewAttached {
 				it.showDestinationPoint(currentDestinationLocation)
 			}
-			val fromPoint = currentCarLocation.toPoint()
-			val toPoint = currentDestinationLocation.toPoint()
-			val newAngle = LocationUtils.calcRotationAngleInDegrees(fromPoint, toPoint)
-
-			val fromAngle = currentCarAngle.toInt()
-			val toAngle = newAngle.toInt()
-
-			val angleDiff = LocationUtils.distance(fromAngle, toAngle)
-			val negativeDirection = LocationUtils.isNegativeDirection(fromAngle, toAngle)
-			if (angleDiff > 0) {
-				val angles = generateAngles(fromAngle, toAngle, negativeDirection)
-				ifViewAttached { it.rotateCar(angles, toAngle) }
-			}
+			val fromPoint = currentCarLocation
+			val toPoint = currentDestinationLocation
+			disposables.add(
+				interactor.calcRotationAngleInDegrees(fromPoint, toPoint)
+					.flatMapMaybe { angle ->
+						val fromAngle = currentCarAngle.toInt()
+						val toAngle = angle.toInt()
+						interactor.generateAngles(fromAngle, toAngle)
+							.map { it to toAngle }
+					}
+					.subscribeOn(Schedulers.computation())
+					.observeOn(AndroidSchedulers.mainThread())
+					.subscribe({ (angles, toAngle) ->
+						ifViewAttached { it.rotateCar(angles, toAngle) }
+					}, { error ->
+						ifViewAttached { it.showError(error.localizedMessage) }
+					})
+			)
 		}
-	}
-
-	private fun generateAngles(fromAngle: Int, toAngle: Int, negativeDirection: Boolean): List<Int> {
-		val angles = arrayListOf<Int>()
-		var angle = fromAngle
-		if (negativeDirection) {
-			while (angle != toAngle) {
-				angles.add(angle)
-				angle--
-				if (angle < 0) {
-					angle += 360
-				}
-			}
-			angles.add(angle)
-		} else {
-			while (angle != toAngle) {
-				angles.add(angle)
-				angle++
-				if (angle >= 360) {
-					angle = 360 - angle
-				}
-			}
-			angles.add(angle)
-		}
-		return angles
 	}
 
 	private fun onCarRotationEnd(angle: Float) {
 		currentCarAngle = angle
-
 		startMovingCar(currentCarLocation, currentDestinationLocation)
 	}
 

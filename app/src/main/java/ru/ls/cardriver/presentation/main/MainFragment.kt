@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
+import android.widget.Toast
 import androidx.core.animation.doOnEnd
 import com.hannesdorfmann.mosby3.mvp.MvpFragment
 import com.jakewharton.rxbinding3.view.touches
@@ -16,6 +17,7 @@ import com.jakewharton.rxrelay2.Relay
 import io.reactivex.Observable
 import kotlinx.android.synthetic.main.fragment_main.*
 import ru.ls.cardriver.R
+import ru.ls.cardriver.data.interactor.LocationInteractorImpl
 import ru.ls.cardriver.domain.model.CarLocation
 import ru.ls.cardriver.domain.model.PointLocation
 
@@ -39,7 +41,7 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 		}
 	}
 
-	override fun createPresenter(): MainPresenter = MainPresenter()
+	override fun createPresenter(): MainPresenter = MainPresenter(LocationInteractorImpl())
 
 	override fun destinationClicks(): Observable<PointLocation> =
 		container.touches { it.action == MotionEvent.ACTION_DOWN }
@@ -114,6 +116,10 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 				}
 				start()
 			}
+	}
+
+	override fun showError(message: String) {
+		Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
 	}
 
 	companion object {
