@@ -23,5 +23,5 @@ interface MainView : MvpView {
 
 	fun rotateCar(angles: List<Int>, toAngle: Int)
 
-	fun moveCar(stepCount: Int, coordsX: Array<Int>, coordsY: Array<Int>, destinationLocation: PointLocation)
+	fun moveCar(stepCount: Int, coordsX: IntArray, coordsY: IntArray, destinationLocation: PointLocation)
 }

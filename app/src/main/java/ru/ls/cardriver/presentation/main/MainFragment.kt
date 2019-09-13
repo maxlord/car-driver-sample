@@ -6,7 +6,7 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.AccelerateDecelerateInterpolator
+import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 import androidx.core.animation.doOnEnd
 import com.hannesdorfmann.mosby3.mvp.MvpFragment
@@ -18,7 +18,6 @@ import kotlinx.android.synthetic.main.fragment_main.*
 import ru.ls.cardriver.R
 import ru.ls.cardriver.domain.model.CarLocation
 import ru.ls.cardriver.domain.model.PointLocation
-import timber.log.Timber
 
 class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 
@@ -79,13 +78,12 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 	}
 
 	override fun rotateCar(angles: List<Int>, toAngle: Int) {
-		Timber.d("angles: $angles")
-		ValueAnimator.ofInt(*angles.toIntArray())
+		ValueAnimator.ofInt(0, angles.size - 1)
 			.apply {
-				interpolator = AccelerateDecelerateInterpolator()
+				interpolator = AccelerateInterpolator()
 				duration = CAR_ROTATION_DURATION
 				addUpdateListener {
-					val angle = it.animatedValue as Int
+					val angle = angles[it.animatedValue as Int]
 					setCarAngle(angle.toFloat())
 				}
 				doOnEnd {
@@ -97,8 +95,8 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 
 	override fun moveCar(
 		stepCount: Int,
-		coordsX: Array<Int>,
-		coordsY: Array<Int>,
+		coordsX: IntArray,
+		coordsY: IntArray,
 		destinationLocation: PointLocation
 	) {
 		ValueAnimator.ofInt(0, stepCount - 1)

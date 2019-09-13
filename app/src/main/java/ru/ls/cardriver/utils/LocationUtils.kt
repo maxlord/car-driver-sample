@@ -25,8 +25,11 @@ class LocationUtils {
 		 */
 		fun distance(alpha: Int, beta: Int): Int {
 			val phi = abs(beta - alpha) % 360 // This is either the distance or 360 - distance
-//			return phi
 			return if (phi > 180) 360 - phi else phi
+		}
+
+		fun negativeDirection(alpha: Int, beta: Int): Boolean {
+			return alpha - beta in 0..180 || alpha - beta <= -180 && alpha - beta >= -360
 		}
 	}
 }

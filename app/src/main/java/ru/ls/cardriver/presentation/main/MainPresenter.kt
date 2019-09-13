@@ -49,35 +49,39 @@ class MainPresenter : MvpBasePresenter<MainView>() {
 				val fromAngle = currentCarAngle.toInt()
 				val toAngle = newAngle.toInt()
 
-				val angleDiff= LocationUtils.distance(fromAngle, toAngle)
-				Timber.d("angleDiff = $angleDiff")
+				val angleDiff = LocationUtils.distance(fromAngle, toAngle)
+				val negativeDirection = LocationUtils.negativeDirection(fromAngle, toAngle)
 				if (angleDiff > 0) {
-					val angles = arrayListOf<Int>()
-					var angle = fromAngle
-					if (angleDiff < 180) {
-						while (angle != toAngle) {
-							angles.add(angle)
-							angle++
-							if (angle >= 360) {
-								angle = 360 - angle
-							}
-						}
-						angles.add(angle)
-					} else {
-						while (angle != toAngle) {
-							angles.add(angle)
-							angle--
-							if (angle < 0) {
-								angle += 360
-							}
-						}
-						angles.add(angle)
-					}
-
+					val angles = generateAngles(fromAngle, toAngle, negativeDirection)
 					it.rotateCar(angles, toAngle)
 				}
 			}
 		}
+	}
+
+	private fun generateAngles(fromAngle: Int, toAngle: Int, negativeDirection: Boolean): List<Int> {
+		val angles = arrayListOf<Int>()
+		var angle = fromAngle
+		if (negativeDirection) {
+			while (angle != toAngle) {
+				angles.add(angle)
+				angle--
+				if (angle < 0) {
+					angle += 360
+				}
+			}
+			angles.add(angle)
+		} else {
+			while (angle != toAngle) {
+				angles.add(angle)
+				angle++
+				if (angle >= 360) {
+					angle = 360 - angle
+				}
+			}
+			angles.add(angle)
+		}
+		return angles
 	}
 
 	private fun onCarRotationEnd(angle: Float) {
@@ -93,8 +97,8 @@ class MainPresenter : MvpBasePresenter<MainView>() {
 		val isRightDirectionX = carLocation.x < destinationLocation.x
 		val isTopDirectionY = carLocation.y > destinationLocation.y
 
-		val coordsX: Array<Int> = Array(stepCount) { 0 }
-		val coordsY: Array<Int> = Array(stepCount) { 0 }
+		val coordsX = IntArray(stepCount)
+		val coordsY = IntArray(stepCount)
 
 		for (step in 0 until stepCount) {
 			val offsetX = (if (isRightDirectionX) stepX * step else -stepX * step)
@@ -120,6 +124,6 @@ class MainPresenter : MvpBasePresenter<MainView>() {
 	}
 
 	companion object {
-		private const val CAR_DRIVE_STEP_COUNT = 1000
+		private const val CAR_DRIVE_STEP_COUNT = 100
 	}
 }
