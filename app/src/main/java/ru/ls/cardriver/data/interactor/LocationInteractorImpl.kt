@@ -4,6 +4,7 @@ import io.reactivex.Maybe
 import io.reactivex.Single
 import ru.ls.cardriver.domain.model.PointItem
 import ru.ls.cardriver.utils.LocationUtils
+import kotlin.math.abs
 
 class LocationInteractorImpl : LocationInteractor {
 
@@ -58,5 +59,29 @@ class LocationInteractorImpl : LocationInteractor {
 			angles.add(angle)
 		}
 		return angles
+	}
+
+	override fun generateCoordsForRoute(
+		carLocation: PointItem,
+		destinationLocation: PointItem,
+		stepCount: Int
+	): Single<Pair<IntArray, IntArray>> {
+		return Single.create { emitter ->
+			val stepX = abs(destinationLocation.x - carLocation.x) / (1.0 * stepCount)
+			val stepY = abs(destinationLocation.y - carLocation.y) / (1.0 * stepCount)
+			val isRightDirectionX = carLocation.x < destinationLocation.x
+			val isTopDirectionY = carLocation.y > destinationLocation.y
+
+			val coordsX = IntArray(stepCount)
+			val coordsY = IntArray(stepCount)
+
+			for (step in 0 until stepCount) {
+				val offsetX = (if (isRightDirectionX) stepX * step else -stepX * step)
+				val offsetY = (if (isTopDirectionY) -stepY * step else stepY * step)
+				coordsX[step] = (carLocation.x + offsetX).toInt()
+				coordsY[step] = (carLocation.y + offsetY).toInt()
+			}
+			emitter.onSuccess(coordsX to coordsY)
+		}
 	}
 }

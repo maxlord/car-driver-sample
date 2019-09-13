@@ -19,12 +19,13 @@ import kotlinx.android.synthetic.main.fragment_main.*
 import ru.ls.cardriver.R
 import ru.ls.cardriver.data.interactor.LocationInteractorImpl
 import ru.ls.cardriver.domain.model.CarLocation
+import ru.ls.cardriver.domain.model.PointItem
 import ru.ls.cardriver.domain.model.PointLocation
 
 class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 
 	private val rotationEndRelay: Relay<Float> = PublishRelay.create()
-	private val movingEndRelay: Relay<CarLocation> = PublishRelay.create()
+	private val movingEndRelay: Relay<PointItem> = PublishRelay.create()
 
 	override fun onCreateView(
 		inflater: LayoutInflater,
@@ -43,15 +44,15 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 
 	override fun createPresenter(): MainPresenter = MainPresenter(LocationInteractorImpl())
 
-	override fun destinationClicks(): Observable<PointLocation> =
+	override fun destinationClicks(): Observable<PointItem> =
 		container.touches { it.action == MotionEvent.ACTION_DOWN }
 			.map { PointLocation(it.x.toInt(), it.y.toInt()) }
 
 	override fun onCarRotationEnds(): Observable<Float> = rotationEndRelay
 
-	override fun onCarMovingEnds(): Observable<CarLocation> = movingEndRelay
+	override fun onCarMovingEnds(): Observable<PointItem> = movingEndRelay
 
-	override fun setCarLocation(position: CarLocation) {
+	override fun setCarLocation(position: PointItem) {
 		with(viewCar) {
 			x = (position.x - measuredWidth / 2).toFloat()
 			y = (position.y - measuredHeight / 2).toFloat()
@@ -66,7 +67,7 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 		}
 	}
 
-	override fun showDestinationPoint(location: PointLocation) {
+	override fun showDestinationPoint(location: PointItem) {
 		with(viewDestinationPoint) {
 			x = (location.x - measuredWidth / 2).toFloat()
 			y = (location.y - measuredHeight / 2).toFloat()
@@ -99,7 +100,7 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 		stepCount: Int,
 		coordsX: IntArray,
 		coordsY: IntArray,
-		destinationLocation: PointLocation
+		destinationLocation: PointItem
 	) {
 		ValueAnimator.ofInt(0, stepCount - 1)
 			.apply {

@@ -9,4 +9,10 @@ interface LocationInteractor {
 	fun calcRotationAngleInDegrees(fromPoint: PointItem, toPoint: PointItem): Single<Double>
 
 	fun generateAngles(fromAngle: Int, toAngle: Int): Maybe<List<Int>>
+
+	fun generateCoordsForRoute(
+		carLocation: PointItem,
+		destinationLocation: PointItem,
+		stepCount: Int
+	): Single<Pair<IntArray, IntArray>>
 }

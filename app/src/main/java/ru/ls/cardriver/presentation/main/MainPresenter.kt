@@ -6,8 +6,8 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import ru.ls.cardriver.data.interactor.LocationInteractor
 import ru.ls.cardriver.domain.model.CarLocation
+import ru.ls.cardriver.domain.model.PointItem
 import ru.ls.cardriver.domain.model.PointLocation
-import kotlin.math.abs
 
 class MainPresenter(
 	private val interactor: LocationInteractor
@@ -16,8 +16,8 @@ class MainPresenter(
 	private val disposables = CompositeDisposable()
 	private var containerWidth: Int = 0
 	private var containerHeight: Int = 0
-	private var currentCarLocation: CarLocation = CarLocation(containerWidth, containerHeight)
-	private var currentDestinationLocation: PointLocation = PointLocation(0, 0)
+	private var currentCarLocation: PointItem = CarLocation(containerWidth, containerHeight)
+	private var currentDestinationLocation: PointItem = PointLocation(0, 0)
 	private var currentCarAngle: Float = 0f
 	private var isDriving = false
 
@@ -37,7 +37,7 @@ class MainPresenter(
 		}
 	}
 
-	private fun onHandleDestinationClick(location: PointLocation) {
+	private fun onHandleDestinationClick(location: PointItem) {
 		if (!isDriving) {
 			isDriving = true
 			currentDestinationLocation = location
@@ -70,29 +70,22 @@ class MainPresenter(
 		startMovingCar(currentCarLocation, currentDestinationLocation)
 	}
 
-	private fun startMovingCar(carLocation: CarLocation, destinationLocation: PointLocation) {
+	private fun startMovingCar(carLocation: PointItem, destinationLocation: PointItem) {
 		val stepCount = CAR_DRIVE_STEP_COUNT
-		val stepX = abs(destinationLocation.x - carLocation.x) / (1.0 * stepCount)
-		val stepY = abs(destinationLocation.y - carLocation.y) / (1.0 * stepCount)
-		val isRightDirectionX = carLocation.x < destinationLocation.x
-		val isTopDirectionY = carLocation.y > destinationLocation.y
-
-		val coordsX = IntArray(stepCount)
-		val coordsY = IntArray(stepCount)
-
-		for (step in 0 until stepCount) {
-			val offsetX = (if (isRightDirectionX) stepX * step else -stepX * step)
-			val offsetY = (if (isTopDirectionY) -stepY * step else stepY * step)
-			coordsX[step] = (carLocation.x + offsetX).toInt()
-			coordsY[step] = (carLocation.y + offsetY).toInt()
-		}
-
-		ifViewAttached {
-			it.moveCar(stepCount, coordsX, coordsY, destinationLocation)
-		}
+		disposables.add(
+			interactor.generateCoordsForRoute(carLocation, destinationLocation, stepCount)
+				.observeOn(AndroidSchedulers.mainThread())
+				.subscribe({ (coordsX, coordsY) ->
+					ifViewAttached {
+						it.moveCar(stepCount, coordsX, coordsY, destinationLocation)
+					}
+				}, { error ->
+					ifViewAttached { it.showError(error.localizedMessage) }
+				})
+		)
 	}
 
-	private fun onCarMovingEnd(location: CarLocation) {
+	private fun onCarMovingEnd(location: PointItem) {
 		ifViewAttached { it.hideDestinationPoint() }
 		currentCarLocation = location
 		isDriving = false
