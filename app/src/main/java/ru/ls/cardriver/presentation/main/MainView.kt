@@ -9,6 +9,10 @@ interface MainView : MvpView {
 
 	fun destinationClicks(): Observable<PointLocation>
 
+	fun onCarRotationEnds(): Observable<Float>
+
+	fun onCarMovingEnds(): Observable<CarLocation>
+
 	fun setCarLocation(position: CarLocation)
 
 	fun setCarAngle(angle: Float)
@@ -16,4 +20,8 @@ interface MainView : MvpView {
 	fun showDestinationPoint(location: PointLocation)
 
 	fun hideDestinationPoint()
+
+	fun rotateCar(fromAngle: Float, toAngle: Float)
+
+	fun moveCar(carLocation: CarLocation, destinationLocation: PointLocation)
 }
