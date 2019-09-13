@@ -18,7 +18,7 @@ import kotlinx.android.synthetic.main.fragment_main.*
 import ru.ls.cardriver.R
 import ru.ls.cardriver.domain.model.CarLocation
 import ru.ls.cardriver.domain.model.PointLocation
-import kotlin.math.abs
+import timber.log.Timber
 
 class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 
@@ -78,44 +78,38 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 		viewDestinationPoint.visibility = View.INVISIBLE
 	}
 
-	override fun rotateCar(fromAngle: Float, toAngle: Float) {
-		if (abs(fromAngle - toAngle) < 0.5) return
-
-		ValueAnimator.ofFloat(fromAngle, toAngle)
+	override fun rotateCar(angles: List<Int>, toAngle: Int) {
+		Timber.d("angles: $angles")
+		ValueAnimator.ofInt(*angles.toIntArray())
 			.apply {
 				interpolator = AccelerateDecelerateInterpolator()
 				duration = CAR_ROTATION_DURATION
 				addUpdateListener {
-					val angle = it.animatedValue as Float
-					setCarAngle(angle)
+					val angle = it.animatedValue as Int
+					setCarAngle(angle.toFloat())
 				}
 				doOnEnd {
-					rotationEndRelay.accept(toAngle)
+					rotationEndRelay.accept(toAngle.toFloat())
 				}
 				start()
 			}
 	}
 
 	override fun moveCar(
-		carLocation: CarLocation,
+		stepCount: Int,
+		coordsX: Array<Int>,
+		coordsY: Array<Int>,
 		destinationLocation: PointLocation
 	) {
-		val stepCount = CAR_DRIVE_STEP_COUNT
-		val stepX = abs(destinationLocation.x - carLocation.x) / (1.0 * stepCount)
-		val stepY = abs(destinationLocation.y - carLocation.y) / (1.0 * stepCount)
-		val isRightDirectionX = carLocation.x < destinationLocation.x
-		val isTopDirectionY = carLocation.y > destinationLocation.y
 		ValueAnimator.ofInt(0, stepCount - 1)
 			.apply {
 				interpolator = DecelerateInterpolator()
 				duration = CAR_DRIVE_DURATION
 				addUpdateListener {
 					val step = it.animatedValue as Int
-					val offsetX = (if (isRightDirectionX) stepX * step else -stepX * step)
-					val offsetY = (if (isTopDirectionY) -stepY * step else stepY * step)
-					val x = carLocation.x + offsetX
-					val y = carLocation.y + offsetY
-					setCarLocation(CarLocation(x.toInt(), y.toInt()))
+					val x = coordsX[step]
+					val y = coordsY[step]
+					setCarLocation(CarLocation(x, y))
 				}
 				doOnEnd {
 					movingEndRelay.accept(CarLocation(destinationLocation.x, destinationLocation.y))
@@ -128,7 +122,6 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 
 		private const val CAR_ROTATION_DURATION = 1_500L
 		private const val CAR_DRIVE_DURATION = 3_000L
-		private const val CAR_DRIVE_STEP_COUNT = 1000
 
 		fun newInstance() = MainFragment()
 	}

@@ -21,7 +21,7 @@ interface MainView : MvpView {
 
 	fun hideDestinationPoint()
 
-	fun rotateCar(fromAngle: Float, toAngle: Float)
+	fun rotateCar(angles: List<Int>, toAngle: Int)
 
-	fun moveCar(carLocation: CarLocation, destinationLocation: PointLocation)
+	fun moveCar(stepCount: Int, coordsX: Array<Int>, coordsY: Array<Int>, destinationLocation: PointLocation)
 }

@@ -5,6 +5,7 @@ import io.reactivex.disposables.CompositeDisposable
 import ru.ls.cardriver.domain.model.CarLocation
 import ru.ls.cardriver.domain.model.PointLocation
 import ru.ls.cardriver.utils.LocationUtils
+import kotlin.math.abs
 
 class MainPresenter : MvpBasePresenter<MainView>() {
 
@@ -44,19 +45,69 @@ class MainPresenter : MvpBasePresenter<MainView>() {
 			val newAngle = LocationUtils.calcRotationAngleInDegrees(fromPoint, toPoint)
 
 			ifViewAttached {
-				it.rotateCar(currentCarAngle, newAngle.toFloat())
+				val fromAngle = currentCarAngle.toInt()
+				val toAngle = newAngle.toInt()
+
+				val angleDiff= abs(fromAngle - toAngle)
+				if (angleDiff > 0) {
+					val angles = arrayListOf<Int>()
+					var angle = fromAngle
+					if (angleDiff < 180) {
+						while (angle != toAngle) {
+							angles.add(angle)
+							angle++
+							if (angle >= 360) {
+								angle = 360 - angle
+							}
+						}
+						angles.add(angle)
+					} else {
+						while (angle != toAngle) {
+							angles.add(angle)
+							angle--
+							if (angle < 0) {
+								angle += 360
+							}
+						}
+						angles.add(angle)
+					}
+
+					it.rotateCar(angles, toAngle)
+				}
 			}
 		}
 	}
 
 	private fun onCarRotationEnd(angle: Float) {
 		currentCarAngle = angle
+
+		startMovingCar(currentCarLocation, currentDestinationLocation)
+	}
+
+	private fun startMovingCar(carLocation: CarLocation, destinationLocation: PointLocation) {
+		val stepCount = CAR_DRIVE_STEP_COUNT
+		val stepX = abs(destinationLocation.x - carLocation.x) / (1.0 * stepCount)
+		val stepY = abs(destinationLocation.y - carLocation.y) / (1.0 * stepCount)
+		val isRightDirectionX = carLocation.x < destinationLocation.x
+		val isTopDirectionY = carLocation.y > destinationLocation.y
+
+		val coordsX: Array<Int> = Array(stepCount) { 0 }
+		val coordsY: Array<Int> = Array(stepCount) { 0 }
+
+		for (step in 0 until stepCount) {
+			val offsetX = (if (isRightDirectionX) stepX * step else -stepX * step)
+			val offsetY = (if (isTopDirectionY) -stepY * step else stepY * step)
+			coordsX[step] = (carLocation.x + offsetX).toInt()
+			coordsY[step] = (carLocation.y + offsetY).toInt()
+		}
+
 		ifViewAttached {
-			it.moveCar(currentCarLocation, currentDestinationLocation)
+			it.moveCar(stepCount, coordsX, coordsY, destinationLocation)
 		}
 	}
 
 	private fun onCarMovingEnd(location: CarLocation) {
+		ifViewAttached { it.hideDestinationPoint() }
 		currentCarLocation = location
 		isDriving = false
 	}
@@ -66,5 +117,7 @@ class MainPresenter : MvpBasePresenter<MainView>() {
 		super.destroy()
 	}
 
-	companion object
+	companion object {
+		private const val CAR_DRIVE_STEP_COUNT = 1000
+	}
 }
