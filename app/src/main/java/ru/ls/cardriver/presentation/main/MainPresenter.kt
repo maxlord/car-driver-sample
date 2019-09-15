@@ -1,16 +1,16 @@
 package ru.ls.cardriver.presentation.main
 
 import com.hannesdorfmann.mosby3.mvp.MvpBasePresenter
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.schedulers.Schedulers
 import ru.ls.cardriver.data.interactor.LocationInteractor
 import ru.ls.cardriver.domain.model.CarLocation
 import ru.ls.cardriver.domain.model.PointItem
 import ru.ls.cardriver.domain.model.PointLocation
+import ru.ls.cardriver.rx.SchedulerProvider
 
 class MainPresenter(
-	private val interactor: LocationInteractor
+	private val interactor: LocationInteractor,
+	private val schedulerProvider: SchedulerProvider
 ) : MvpBasePresenter<MainView>() {
 
 	private val disposables = CompositeDisposable()
@@ -54,8 +54,8 @@ class MainPresenter(
 						interactor.generateAngles(fromAngle, toAngle)
 							.map { it to toAngle }
 					}
-					.subscribeOn(Schedulers.computation())
-					.observeOn(AndroidSchedulers.mainThread())
+					.subscribeOn(schedulerProvider.computation())
+					.observeOn(schedulerProvider.ui())
 					.subscribe({ (angles, toAngle) ->
 						ifViewAttached { it.rotateCar(angles, toAngle) }
 					}, { error ->
@@ -74,7 +74,7 @@ class MainPresenter(
 		val stepCount = CAR_DRIVE_STEP_COUNT
 		disposables.add(
 			interactor.generateCoordsForRoute(carLocation, destinationLocation, stepCount)
-				.observeOn(AndroidSchedulers.mainThread())
+				.observeOn(schedulerProvider.ui())
 				.subscribe({ (coordsX, coordsY) ->
 					ifViewAttached {
 						it.moveCar(stepCount, coordsX, coordsY, destinationLocation)

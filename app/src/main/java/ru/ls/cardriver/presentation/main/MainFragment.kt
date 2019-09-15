@@ -17,15 +17,24 @@ import com.jakewharton.rxrelay2.Relay
 import io.reactivex.Observable
 import kotlinx.android.synthetic.main.fragment_main.*
 import ru.ls.cardriver.R
-import ru.ls.cardriver.data.interactor.LocationInteractorImpl
 import ru.ls.cardriver.domain.model.CarLocation
 import ru.ls.cardriver.domain.model.PointItem
 import ru.ls.cardriver.domain.model.PointLocation
+import ru.ls.cardriver.presentation.MainActivity
+import javax.inject.Inject
 
 class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 
 	private val rotationEndRelay: Relay<Float> = PublishRelay.create()
 	private val movingEndRelay: Relay<PointItem> = PublishRelay.create()
+
+	@Inject
+	lateinit var _presenter: MainPresenter
+
+	override fun onCreate(savedInstanceState: Bundle?) {
+		(requireActivity() as MainActivity).component.inject(this)
+		super.onCreate(savedInstanceState)
+	}
 
 	override fun onCreateView(
 		inflater: LayoutInflater,
@@ -42,7 +51,7 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 		}
 	}
 
-	override fun createPresenter(): MainPresenter = MainPresenter(LocationInteractorImpl())
+	override fun createPresenter(): MainPresenter = _presenter
 
 	override fun destinationClicks(): Observable<PointItem> =
 		container.touches { it.action == MotionEvent.ACTION_DOWN }
