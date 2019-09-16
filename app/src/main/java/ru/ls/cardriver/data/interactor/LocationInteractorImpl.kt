@@ -39,25 +39,20 @@ class LocationInteractorImpl : LocationInteractor {
 	): List<Int> {
 		val angles = arrayListOf<Int>()
 		var angle = fromAngle
-		if (negativeDirection) {
-			while (angle != toAngle) {
-				angles.add(angle)
-				angle--
+		while (angle != toAngle) {
+			angles.add(angle)
+			if (negativeDirection) angle-- else angle++
+			if (negativeDirection) {
 				if (angle < 0) {
 					angle += 360
 				}
-			}
-			angles.add(angle)
-		} else {
-			while (angle != toAngle) {
-				angles.add(angle)
-				angle++
+			} else {
 				if (angle >= 360) {
 					angle = 360 - angle
 				}
 			}
-			angles.add(angle)
 		}
+		angles.add(angle)
 		return angles
 	}
 
@@ -76,8 +71,10 @@ class LocationInteractorImpl : LocationInteractor {
 			val coordsY = IntArray(stepCount)
 
 			for (step in 0 until stepCount) {
-				val offsetX = (if (isRightDirectionX) stepX * step else -stepX * step)
-				val offsetY = (if (isTopDirectionY) -stepY * step else stepY * step)
+				val factorX = stepX * step
+				val factorY = stepY * step
+				val offsetX = if (isRightDirectionX) factorX else -factorX
+				val offsetY = if (isTopDirectionY) -factorY else factorY
 				coordsX[step] = (carLocation.x + offsetX).toInt()
 				coordsY[step] = (carLocation.y + offsetY).toInt()
 			}
