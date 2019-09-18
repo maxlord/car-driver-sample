@@ -28,6 +28,9 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 	private val rotationEndRelay: Relay<Float> = PublishRelay.create()
 	private val movingEndRelay: Relay<PointItem> = PublishRelay.create()
 
+	private var rotationAnimator: ValueAnimator? = null
+	private var movingAnimator: ValueAnimator? = null
+
 	@Inject
 	lateinit var _presenter: MainPresenter
 
@@ -49,6 +52,12 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 		container.post {
 			presenter.init(container.width, container.height)
 		}
+	}
+
+	override fun onStop() {
+		rotationAnimator?.cancel()
+		movingAnimator?.cancel()
+		super.onStop()
 	}
 
 	override fun createPresenter(): MainPresenter = _presenter
@@ -90,7 +99,7 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 	}
 
 	override fun rotateCar(angles: List<Int>, toAngle: Int) {
-		ValueAnimator.ofInt(0, angles.size - 1)
+		rotationAnimator = ValueAnimator.ofInt(0, angles.size - 1)
 			.apply {
 				interpolator = AccelerateInterpolator()
 				duration = CAR_ROTATION_DURATION
@@ -101,8 +110,8 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 				doOnEnd {
 					rotationEndRelay.accept(toAngle.toFloat())
 				}
-				start()
 			}
+		rotationAnimator?.start()
 	}
 
 	override fun moveCar(
@@ -111,7 +120,7 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 		coordsY: IntArray,
 		destinationLocation: PointItem
 	) {
-		ValueAnimator.ofInt(0, stepCount - 1)
+		movingAnimator = ValueAnimator.ofInt(0, stepCount - 1)
 			.apply {
 				interpolator = DecelerateInterpolator()
 				duration = CAR_DRIVE_DURATION
@@ -124,8 +133,8 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 				doOnEnd {
 					movingEndRelay.accept(CarLocation(destinationLocation.x, destinationLocation.y))
 				}
-				start()
 			}
+		movingAnimator?.start()
 	}
 
 	override fun showError(message: String) {
