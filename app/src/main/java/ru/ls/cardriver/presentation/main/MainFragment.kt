@@ -65,14 +65,14 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 		with(viewCar) {
 			x = (position.x - measuredWidth / 2).toFloat()
 			y = (position.y - measuredHeight / 2).toFloat()
-			requestLayout()
+			invalidate()
 		}
 	}
 
 	override fun setCarAngle(angle: Float) {
 		with(viewCar) {
 			rotation = angle
-			requestLayout()
+			invalidate()
 		}
 	}
 
@@ -81,7 +81,7 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 			x = (location.x - measuredWidth / 2).toFloat()
 			y = (location.y - measuredHeight / 2).toFloat()
 			visibility = View.VISIBLE
-			requestLayout()
+			invalidate()
 		}
 	}
 
