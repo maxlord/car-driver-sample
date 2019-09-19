@@ -14,27 +14,26 @@ class MainPresenter(
 ) : MvpBasePresenter<MainView>() {
 
 	private val disposables = CompositeDisposable()
-	private var containerWidth: Int = 0
-	private var containerHeight: Int = 0
-	private var currentCarLocation: PointItem = CarLocation(containerWidth, containerHeight)
+	private var currentCarLocation: PointItem = CarLocation(0, 0)
 	private var currentDestinationLocation: PointItem = PointLocation(0, 0)
 	private var currentCarAngle: Float = 0f
 	private var isDriving = false
 
-	fun init(width: Int, height: Int) {
-		containerWidth = width
-		containerHeight = height
-		currentCarLocation = CarLocation(containerWidth / 2, containerHeight / 2)
-
+	fun init() {
 		ifViewAttached { v ->
+			disposables.add(v.centerChanges().subscribe(this::onHandleCenterChange))
 			disposables.add(v.destinationClicks().subscribe(this::onHandleDestinationClick))
 			disposables.add(v.onCarRotationEnds().subscribe(this::onCarRotationEnd))
 			disposables.add(v.onCarMovingEnds().subscribe(this::onCarMovingEnd))
 
-			v.setCarLocation(currentCarLocation)
 			v.setCarAngle(currentCarAngle)
 			v.hideDestinationPoint()
 		}
+	}
+
+	private fun onHandleCenterChange(location: PointItem) {
+		currentCarLocation = CarLocation(location.x, location.y)
+		ifViewAttached { v -> v.setCarLocation(currentCarLocation) }
 	}
 
 	private fun onHandleDestinationClick(location: PointItem) {
@@ -67,7 +66,9 @@ class MainPresenter(
 
 	private fun onCarRotationEnd(angle: Float) {
 		currentCarAngle = angle
-		startMovingCar(currentCarLocation, currentDestinationLocation)
+		currentCarLocation?.let {
+			startMovingCar(it, currentDestinationLocation)
+		}
 	}
 
 	private fun startMovingCar(carLocation: PointItem, destinationLocation: PointItem) {

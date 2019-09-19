@@ -6,6 +6,8 @@ import ru.ls.cardriver.domain.model.PointItem
 
 interface MainView : MvpView {
 
+	fun centerChanges(): Observable<PointItem>
+
 	fun destinationClicks(): Observable<PointItem>
 
 	fun onCarRotationEnds(): Observable<Float>

@@ -27,6 +27,7 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 
 	private val rotationEndRelay: Relay<Float> = PublishRelay.create()
 	private val movingEndRelay: Relay<PointItem> = PublishRelay.create()
+	private val centerChangesRelay: Relay<PointItem> = PublishRelay.create()
 
 	private var rotationAnimator: ValueAnimator? = null
 	private var movingAnimator: ValueAnimator? = null
@@ -49,8 +50,12 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 
 	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 		super.onViewCreated(view, savedInstanceState)
+		presenter.init()
 		container.post {
-			presenter.init(container.width, container.height)
+			centerChangesRelay.accept(object : PointItem {
+				override val x: Int = container.width / 2
+				override val y: Int = container.height / 2
+			})
 		}
 	}
 
@@ -61,6 +66,8 @@ class MainFragment : MvpFragment<MainView, MainPresenter>(), MainView {
 	}
 
 	override fun createPresenter(): MainPresenter = _presenter
+
+	override fun centerChanges(): Observable<PointItem> = centerChangesRelay
 
 	override fun destinationClicks(): Observable<PointItem> =
 		container.touches { it.action == MotionEvent.ACTION_DOWN }
